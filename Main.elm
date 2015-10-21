@@ -26,14 +26,15 @@ type Action
   = Tick Float
   | Jump
   | Rewind
+  | Reset
 
 initialModel : Model
 initialModel =
   {currentGame = {time = Nothing
-                 ,alive = True
-                 ,jumpState = Nothing
-                 ,obstacles = [800, 1400]
-                 ,score = 0.0}
+                ,alive = True
+                ,jumpState = Nothing
+                ,obstacles = [800, 1400]
+                ,score = 0.0}
   ,previousGames = []}
 
 ------------------------------------------------------------
@@ -41,12 +42,11 @@ initialModel =
 ------------------------------------------------------------
 rootView : Address Action -> Model -> Html
 rootView _ model =
-  div []
-      [div [] [code [] [text (toString model.currentGame)]]
-      ,h1 [style [("font-family", "monospace")]]
+  div [style [("margin", "20px")]]
+      [h1 [style [("font-family", "monospace")]]
           [text ("Score: " ++ (toString (floor model.currentGame.score)))]
       ,h2 [] [text "Instructions"]
-      ,p [] [text "<space> to jump, <shift> to jump back in time."]
+      ,p [] [text "<space> to jump, <shift> to jump back in time, <enter> to start a new game."]
       ,Svg.svg [width "800px"
                ,height "500px"]
                ((List.map obstacleView model.currentGame.obstacles)
@@ -56,7 +56,8 @@ rootView _ model =
                        ,r (toString heroRadius)
                        ,fill (if model.currentGame.alive
                              then "black"
-                             else "red")] []])]
+                             else "red")] []])
+      ,div [] [code [] [text (toString model.currentGame)]]]
 
 obstacleView : Float -> Svg
 obstacleView n =
@@ -144,6 +145,7 @@ update action model =
     Rewind -> let newGame = Maybe.withDefault model.currentGame (List.head (List.reverse model.previousGames))
              in {model | currentGame <- newGame
                        , previousGames <- []}
+    Reset -> initialModel
     _ -> let newGame = updateGame action model.currentGame
          in {model | currentGame <- newGame
                    , previousGames <- List.take 100 (model.currentGame :: model.previousGames)}
@@ -162,7 +164,8 @@ app = StartApp.start {init = (initialModel, none)
                      ,update = \action model -> (update action model, none)
                      ,inputs = [Signal.map Tick (Time.fps 40)
                                ,Signal.map (always Jump) Keyboard.space
-                               ,Signal.map (always Rewind) Keyboard.shift]}
+                               ,Signal.map (always Rewind) Keyboard.shift
+                               ,Signal.map (always Reset) Keyboard.enter]}
 
 main : Signal Html
 main = app.html
