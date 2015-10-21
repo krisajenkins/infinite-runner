@@ -11,24 +11,30 @@ import Task exposing (..)
 import Time exposing (..)
 import Keyboard
 
-type alias Model =
+type alias Game =
   {time : Maybe Float
   ,alive : Bool
   ,jumpState : Maybe Float
   ,obstacles : List Float
   ,score : Float}
 
+type alias Model =
+  {currentGame : Game
+  ,previousGames : List Game}
+
 type Action
   = Tick Float
   | Jump
+  | Reset
 
 initialModel : Model
 initialModel =
-  {time = Nothing
-  ,alive = True
-  ,jumpState = Nothing
-  ,obstacles = [800, 1400]
-  ,score = 0.0}
+  {currentGame = {time = Nothing
+                 ,alive = True
+                 ,jumpState = Nothing
+                 ,obstacles = [800, 1400]
+                 ,score = 0.0}
+  ,previousGames = []}
 
 initialEffects : Effects Action
 initialEffects =
@@ -40,17 +46,17 @@ initialEffects =
 rootView : Address Action -> Model -> Html
 rootView _ model =
   div []
-      [div [] [code [] [text (toString model)]]
+      [div [] [code [] [text (toString model.currentGame)]]
       ,h1 [style [("font-family", "monospace")]]
-          [text ("Score: " ++ (toString (floor model.score)))]
+          [text ("Score: " ++ (toString (floor model.currentGame.score)))]
       ,Svg.svg [width "800px"
                ,height "500px"]
-               ((List.map obstacleView model.obstacles)
+               ((List.map obstacleView model.currentGame.obstacles)
                 ++
                [circle [cx (toString heroX)
-                        ,cy (toString (jumpOffset (Maybe.withDefault 0 model.jumpState)))
+                        ,cy (toString (jumpOffset (Maybe.withDefault 0 model.currentGame.jumpState)))
                         ,r (toString heroRadius)
-                        ,fill (if model.alive
+                        ,fill (if model.currentGame.alive
                               then "black"
                               else "red")] []]
                 )]
@@ -116,23 +122,36 @@ stepHero tick state =
 ------------------------------------------------------------
 -- Loop
 ------------------------------------------------------------
-update : Action -> Model -> Model
-update action model =
+
+updateGame : Action -> Game -> Game
+updateGame action game =
   case action of
-    Tick n -> let newAlive = not (List.any (crash model.jumpState) model.obstacles)
+    Tick n -> let newAlive = not (List.any (crash game.jumpState) game.obstacles)
               in if newAlive
-                 then {model | time <- Just n
-                             , score <- model.score + n
-                             , jumpState <- let jumpState' = Maybe.map (stepHero n) model.jumpState
+                 then {game | time <- Just n
+                             , score <- game.score + n
+                             , jumpState <- let jumpState' = Maybe.map (stepHero n) game.jumpState
                                             in if (Maybe.withDefault 1 jumpState') < 1
                                                then jumpState'
                                                else Nothing
-                             , obstacles <- List.map (stepObstacle n) model.obstacles
+                             , obstacles <- List.map (stepObstacle n) game.obstacles
                              , alive <- newAlive}
-                 else { model | alive <- newAlive}
-    Jump -> (case model.jumpState of
-              Nothing -> {model | jumpState <- Just 0}
-              _ -> model)
+                 else { game | alive <- newAlive}
+    Jump -> (case game.jumpState of
+              Nothing -> {game | jumpState <- Just 0}
+              _ -> game)
+    Reset -> game
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    Reset -> let newGame = Maybe.withDefault model.currentGame (List.head (List.reverse model.previousGames))
+             in {model | currentGame <- newGame
+                       , previousGames <- []}
+    _ -> let newGame = updateGame action model.currentGame
+         in {model | currentGame <- newGame
+                   , previousGames <- List.take 100 (model.currentGame :: model.previousGames)}
+
 
 effect : Action -> Model -> Effects Action
 effect action model = none
@@ -152,7 +171,8 @@ app = StartApp.start {init = (initialModel
                                                     newEffects = effect action newModel
                                                 in (newModel, newEffects)
                      ,inputs = [Signal.map Tick (Time.fps 40)
-                               ,Signal.map (always Jump) Keyboard.space]}
+                               ,Signal.map (always Jump) Keyboard.space
+                               ,Signal.map (always Reset) Keyboard.shift]}
 
 main : Signal Html
 main = app.html
