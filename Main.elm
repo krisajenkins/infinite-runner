@@ -36,10 +36,6 @@ initialModel =
                  ,score = 0.0}
   ,previousGames = []}
 
-initialEffects : Effects Action
-initialEffects =
-  none
-
 ------------------------------------------------------------
 -- View
 ------------------------------------------------------------
@@ -49,17 +45,18 @@ rootView _ model =
       [div [] [code [] [text (toString model.currentGame)]]
       ,h1 [style [("font-family", "monospace")]]
           [text ("Score: " ++ (toString (floor model.currentGame.score)))]
+      ,h2 [] [text "Instructions"]
+      ,p [] [text "<space> to jump, <shift> to jump back in time."]
       ,Svg.svg [width "800px"
                ,height "500px"]
                ((List.map obstacleView model.currentGame.obstacles)
                 ++
                [circle [cx (toString heroX)
-                        ,cy (toString (jumpOffset (Maybe.withDefault 0 model.currentGame.jumpState)))
-                        ,r (toString heroRadius)
-                        ,fill (if model.currentGame.alive
-                              then "black"
-                              else "red")] []]
-                )]
+                       ,cy (toString (jumpOffset (Maybe.withDefault 0 model.currentGame.jumpState)))
+                       ,r (toString heroRadius)
+                       ,fill (if model.currentGame.alive
+                             then "black"
+                             else "red")] []])]
 
 obstacleView : Float -> Svg
 obstacleView n =
@@ -94,6 +91,10 @@ obstacleTop = 350
 obstacleSpeed : Float
 obstacleSpeed = 0.5
 
+stepHero : Float -> Float -> Float
+stepHero tick state =
+  (tick * heroSpeed) + state
+
 stepObstacle : Float -> Float -> Float
 stepObstacle tick n =
   let new = (n - (tick * obstacleSpeed))
@@ -115,14 +116,9 @@ crash jumpState obstacleX =
      &&
      (cx - r < bx2))
 
-stepHero : Float -> Float -> Float
-stepHero tick state =
-  (tick * heroSpeed) + state
-
 ------------------------------------------------------------
 -- Loop
 ------------------------------------------------------------
-
 updateGame : Action -> Game -> Game
 updateGame action game =
   case action of
@@ -153,9 +149,6 @@ update action model =
                    , previousGames <- List.take 100 (model.currentGame :: model.previousGames)}
 
 
-effect : Action -> Model -> Effects Action
-effect action model = none
-
 jumpOffset : Float -> Float
 jumpOffset x = 400 * (4 * ((x - 0.5) ^2))
 
@@ -164,12 +157,9 @@ jumpOffset x = 400 * (4 * ((x - 0.5) ^2))
 ------------------------------------------------------------
 
 app : App Model
-app = StartApp.start {init = (initialModel
-                             ,initialEffects)
+app = StartApp.start {init = (initialModel, none)
                      ,view = rootView
-                     ,update = \action model -> let newModel = update action model
-                                                    newEffects = effect action newModel
-                                                in (newModel, newEffects)
+                     ,update = \action model -> (update action model, none)
                      ,inputs = [Signal.map Tick (Time.fps 40)
                                ,Signal.map (always Jump) Keyboard.space
                                ,Signal.map (always Reset) Keyboard.shift]}
