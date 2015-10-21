@@ -1,0 +1,4 @@
+/.dir-locals.el
+/Main.elm
+/elm-package.json
+/elm-stuff/
