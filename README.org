@@ -1,6 +1,6 @@
 * Infinite Runner in Elm
 
-An Infinite Runner clone.  Written for September 2015's [[http://www.meetup.com/West-London-Hack-Night/][West London Hack Night]].
+An Infinite Runner clone.  Written for October 2015's [[http://www.meetup.com/West-London-Hack-Night/][West London Hack Night]].
 
 ** [[http://krisajenkins.github.io/infinite-runner][Play It Live]]
 
