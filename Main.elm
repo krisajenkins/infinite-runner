@@ -25,7 +25,7 @@ type alias Model =
 type Action
   = Tick Float
   | Jump
-  | Reset
+  | Rewind
 
 initialModel : Model
 initialModel =
@@ -136,12 +136,12 @@ updateGame action game =
     Jump -> (case game.jumpState of
               Nothing -> {game | jumpState <- Just 0}
               _ -> game)
-    Reset -> game
+    Rewind -> game
 
 update : Action -> Model -> Model
 update action model =
   case action of
-    Reset -> let newGame = Maybe.withDefault model.currentGame (List.head (List.reverse model.previousGames))
+    Rewind -> let newGame = Maybe.withDefault model.currentGame (List.head (List.reverse model.previousGames))
              in {model | currentGame <- newGame
                        , previousGames <- []}
     _ -> let newGame = updateGame action model.currentGame
@@ -162,7 +162,7 @@ app = StartApp.start {init = (initialModel, none)
                      ,update = \action model -> (update action model, none)
                      ,inputs = [Signal.map Tick (Time.fps 40)
                                ,Signal.map (always Jump) Keyboard.space
-                               ,Signal.map (always Reset) Keyboard.shift]}
+                               ,Signal.map (always Rewind) Keyboard.shift]}
 
 main : Signal Html
 main = app.html
