@@ -4358,10 +4358,6 @@ Elm.Main.make = function (_elm) {
       return 400 * (4 * Math.pow(x - 0.5,
       2));
    };
-   var effect = F2(function (action,
-   model) {
-      return $Effects.none;
-   });
    var obstacleSpeed = 0.5;
    var obstacleTop = 350;
    var obstacleHeight = 100;
@@ -4412,7 +4408,7 @@ Elm.Main.make = function (_elm) {
                       game);}
                  return game;
               }();
-            case "Reset": return game;
+            case "Rewind": return game;
             case "Tick":
             return function () {
                  var newAlive = $Basics.not(A2($List.any,
@@ -4442,14 +4438,76 @@ Elm.Main.make = function (_elm) {
                  game);
               }();}
          _U.badCase($moduleName,
-         "between lines 128 and 143");
+         "between lines 125 and 140");
       }();
    });
+   var obstacleView = function (n) {
+      return A2($Svg.rect,
+      _L.fromArray([$Svg$Attributes.x($Basics.toString(n))
+                   ,$Svg$Attributes.y($Basics.toString(obstacleTop))
+                   ,$Svg$Attributes.width($Basics.toString(obstacleWidth))
+                   ,$Svg$Attributes.height($Basics.toString(obstacleHeight))
+                   ,$Svg$Attributes.fill("cyan")]),
+      _L.fromArray([]));
+   };
+   var rootView = F2(function (_v3,
+   model) {
+      return function () {
+         return A2($Html.div,
+         _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                            ,_0: "margin"
+                                                            ,_1: "20px"}]))]),
+         _L.fromArray([A2($Html.h1,
+                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                         ,_0: "font-family"
+                                                                         ,_1: "monospace"}]))]),
+                      _L.fromArray([$Html.text(A2($Basics._op["++"],
+                      "Score: ",
+                      $Basics.toString($Basics.floor(model.currentGame.score))))]))
+                      ,A2($Html.h2,
+                      _L.fromArray([]),
+                      _L.fromArray([$Html.text("Instructions")]))
+                      ,A2($Html.p,
+                      _L.fromArray([]),
+                      _L.fromArray([$Html.text("<space> to jump, <shift> to jump back in time, <enter> to start a new game.")]))
+                      ,A2($Svg.svg,
+                      _L.fromArray([$Svg$Attributes.width("800px")
+                                   ,$Svg$Attributes.height("500px")]),
+                      A2($Basics._op["++"],
+                      A2($List.map,
+                      obstacleView,
+                      model.currentGame.obstacles),
+                      _L.fromArray([A2($Svg.circle,
+                      _L.fromArray([$Svg$Attributes.cx($Basics.toString(heroX))
+                                   ,$Svg$Attributes.cy($Basics.toString(jumpOffset(A2($Maybe.withDefault,
+                                   0,
+                                   model.currentGame.jumpState))))
+                                   ,$Svg$Attributes.r($Basics.toString(heroRadius))
+                                   ,$Svg$Attributes.fill(model.currentGame.alive ? "black" : "red")]),
+                      _L.fromArray([]))])))
+                      ,A2($Html.div,
+                      _L.fromArray([]),
+                      _L.fromArray([A2($Html.code,
+                      _L.fromArray([]),
+                      _L.fromArray([$Html.text($Basics.toString(model.currentGame))]))]))]));
+      }();
+   });
+   var initialModel = {_: {}
+                      ,currentGame: {_: {}
+                                    ,alive: true
+                                    ,jumpState: $Maybe.Nothing
+                                    ,obstacles: _L.fromArray([800
+                                                             ,1400])
+                                    ,score: 0.0
+                                    ,time: $Maybe.Nothing}
+                      ,previousGames: _L.fromArray([])};
    var update = F2(function (action,
    model) {
       return function () {
          switch (action.ctor)
          {case "Reset":
+            return initialModel;
+            case "Rewind":
             return function () {
                  var newGame = A2($Maybe.withDefault,
                  model.currentGame,
@@ -4476,60 +4534,8 @@ Elm.Main.make = function (_elm) {
          }();
       }();
    });
-   var obstacleView = function (n) {
-      return A2($Svg.rect,
-      _L.fromArray([$Svg$Attributes.x($Basics.toString(n))
-                   ,$Svg$Attributes.y($Basics.toString(obstacleTop))
-                   ,$Svg$Attributes.width($Basics.toString(obstacleWidth))
-                   ,$Svg$Attributes.height($Basics.toString(obstacleHeight))
-                   ,$Svg$Attributes.fill("cyan")]),
-      _L.fromArray([]));
-   };
-   var rootView = F2(function (_v4,
-   model) {
-      return function () {
-         return A2($Html.div,
-         _L.fromArray([]),
-         _L.fromArray([A2($Html.div,
-                      _L.fromArray([]),
-                      _L.fromArray([A2($Html.code,
-                      _L.fromArray([]),
-                      _L.fromArray([$Html.text($Basics.toString(model.currentGame))]))]))
-                      ,A2($Html.h1,
-                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                         ,_0: "font-family"
-                                                                         ,_1: "monospace"}]))]),
-                      _L.fromArray([$Html.text(A2($Basics._op["++"],
-                      "Score: ",
-                      $Basics.toString($Basics.floor(model.currentGame.score))))]))
-                      ,A2($Svg.svg,
-                      _L.fromArray([$Svg$Attributes.width("800px")
-                                   ,$Svg$Attributes.height("500px")]),
-                      A2($Basics._op["++"],
-                      A2($List.map,
-                      obstacleView,
-                      model.currentGame.obstacles),
-                      _L.fromArray([A2($Svg.circle,
-                      _L.fromArray([$Svg$Attributes.cx($Basics.toString(heroX))
-                                   ,$Svg$Attributes.cy($Basics.toString(jumpOffset(A2($Maybe.withDefault,
-                                   0,
-                                   model.currentGame.jumpState))))
-                                   ,$Svg$Attributes.r($Basics.toString(heroRadius))
-                                   ,$Svg$Attributes.fill(model.currentGame.alive ? "black" : "red")]),
-                      _L.fromArray([]))])))]));
-      }();
-   });
-   var initialEffects = $Effects.none;
-   var initialModel = {_: {}
-                      ,currentGame: {_: {}
-                                    ,alive: true
-                                    ,jumpState: $Maybe.Nothing
-                                    ,obstacles: _L.fromArray([800
-                                                             ,1400])
-                                    ,score: 0.0
-                                    ,time: $Maybe.Nothing}
-                      ,previousGames: _L.fromArray([])};
    var Reset = {ctor: "Reset"};
+   var Rewind = {ctor: "Rewind"};
    var Jump = {ctor: "Jump"};
    var Tick = function (a) {
       return {ctor: "Tick",_0: a};
@@ -4537,7 +4543,7 @@ Elm.Main.make = function (_elm) {
    var app = $StartApp.start({_: {}
                              ,init: {ctor: "_Tuple2"
                                     ,_0: initialModel
-                                    ,_1: initialEffects}
+                                    ,_1: $Effects.none}
                              ,inputs: _L.fromArray([A2($Signal.map,
                                                    Tick,
                                                    $Time.fps(40))
@@ -4545,21 +4551,16 @@ Elm.Main.make = function (_elm) {
                                                    $Basics.always(Jump),
                                                    $Keyboard.space)
                                                    ,A2($Signal.map,
+                                                   $Basics.always(Rewind),
+                                                   $Keyboard.shift)
+                                                   ,A2($Signal.map,
                                                    $Basics.always(Reset),
-                                                   $Keyboard.shift)])
+                                                   $Keyboard.enter)])
                              ,update: F2(function (action,
                              model) {
-                                return function () {
-                                   var newModel = A2(update,
-                                   action,
-                                   model);
-                                   var newEffects = A2(effect,
-                                   action,
-                                   newModel);
-                                   return {ctor: "_Tuple2"
-                                          ,_0: newModel
-                                          ,_1: newEffects};
-                                }();
+                                return {ctor: "_Tuple2"
+                                       ,_0: A2(update,action,model)
+                                       ,_1: $Effects.none};
                              })
                              ,view: rootView});
    var main = app.html;
@@ -4587,9 +4588,9 @@ Elm.Main.make = function (_elm) {
                       ,Model: Model
                       ,Tick: Tick
                       ,Jump: Jump
+                      ,Rewind: Rewind
                       ,Reset: Reset
                       ,initialModel: initialModel
-                      ,initialEffects: initialEffects
                       ,rootView: rootView
                       ,obstacleView: obstacleView
                       ,heroRadius: heroRadius
@@ -4599,12 +4600,11 @@ Elm.Main.make = function (_elm) {
                       ,obstacleHeight: obstacleHeight
                       ,obstacleTop: obstacleTop
                       ,obstacleSpeed: obstacleSpeed
+                      ,stepHero: stepHero
                       ,stepObstacle: stepObstacle
                       ,crash: crash
-                      ,stepHero: stepHero
                       ,updateGame: updateGame
                       ,update: update
-                      ,effect: effect
                       ,jumpOffset: jumpOffset
                       ,app: app
                       ,main: main};
