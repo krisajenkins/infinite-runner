@@ -35,6 +35,25 @@ initialEffects =
   none
 
 ------------------------------------------------------------
+-- View
+------------------------------------------------------------
+rootView : Address Action -> Model -> Html
+rootView _ model =
+  div []
+      [div [] [code [] [text (toString model)]]
+      ,h1 [style [("font-family", "monospace")]]
+          [text ("Score: " ++ (toString (floor model.score)))]
+      ,Svg.svg [width "800px"
+               ,height "500px"]
+               ((List.map obstacleView model.obstacles)
+                ++
+               [circle [cx (toString heroX)
+                        ,cy (toString (jumpOffset (Maybe.withDefault 0 model.jumpState)))
+                        ,r (toString heroRadius)
+                        ,fill (if model.alive
+                              then "black"
+                              else "red")] []]
+                )]
 
 obstacleView : Float -> Svg
 obstacleView n =
@@ -45,6 +64,9 @@ obstacleView n =
            ,fill "cyan"]
            []
 
+------------------------------------------------------------
+-- Computation
+------------------------------------------------------------
 heroRadius : Float
 heroRadius = 50
 
@@ -65,24 +87,6 @@ obstacleTop = 350
 
 obstacleSpeed : Float
 obstacleSpeed = 0.5
-
-rootView : Address Action -> Model -> Html
-rootView _ model =
-  div []
-      [div [] [code [] [text (toString model)]]
-      ,h1 [style [("font-family", "monospace")]]
-          [text ("Score: " ++ (toString (floor model.score)))]
-      ,Svg.svg [width "800px"
-               ,height "500px"]
-               ((List.map obstacleView model.obstacles)
-                ++
-               [circle [cx (toString heroX)
-                        ,cy (toString (jumpOffset (Maybe.withDefault 0 model.jumpState)))
-                        ,r (toString heroRadius)
-                        ,fill (if model.alive
-                              then "black"
-                              else "red")] []]
-                )]
 
 stepObstacle : Float -> Float -> Float
 stepObstacle tick n =
@@ -109,6 +113,9 @@ stepHero : Float -> Float -> Float
 stepHero tick state =
   (tick * heroSpeed) + state
 
+------------------------------------------------------------
+-- Loop
+------------------------------------------------------------
 update : Action -> Model -> Model
 update action model =
   case action of
