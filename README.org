@@ -7,7 +7,7 @@ An Infinite Runner clone.  Written for October 2015's [[http://www.meetup.com/We
 ** Building
 
 #+BEGIN_SRC sh
-elm-make --output=index.html Main.elm
+elm-make --yes --warn --output=index.html Main.elm
 #+END_SRC
 
 ...then open =index.html= in a browser.
